@@ -1,0 +1,56 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // Kita pakai sqlite biar gampang dev-nya
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // Password bakal di-encrypt nanti
+  name      String?
+  createdAt DateTime @default(now())
+
+  // Relasi: User bisa jadi Panitia (punya banyak event)
+  eventsOwned   Event[]        @relation("Organizer")
+  
+  // Relasi: User bisa jadi Peserta (daftar banyak event)
+  registrations Registration[]
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String   // Nama acara, misal: "GEREX-2025"
+  uniqueCode  String   @unique // Kode unik, misal: "GRX-293844"
+  description String?
+  date        DateTime // Waktu acara
+  location    String?
+  organizerId String
+  createdAt   DateTime @default(now())
+
+  // Relasi ke User yang jadi panitia
+  organizer   User           @relation("Organizer", fields: [organizerId], references: [id])
+  
+  // Relasi ke peserta yang daftar
+  attendees   Registration[]
+}
+
+model Registration {
+  id        String   @id @default(cuid())
+  userId    String
+  eventId   String
+  qrToken   String   @unique @default(uuid()) // String rahasia buat QR Code
+  attended  Boolean  @default(false) // Udah hadir atau belum
+  registeredAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  event     Event    @relation(fields: [eventId], references: [id])
+
+  // Mencegah satu user daftar event yang sama 2 kali
+  @@unique([userId, eventId])
+}
