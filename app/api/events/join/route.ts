@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "../../auth/[...nextauth]/route";
 
+export const dynamic = "force-dynamic";
 // GET: Ambil daftar event yang diikuti user ini
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
